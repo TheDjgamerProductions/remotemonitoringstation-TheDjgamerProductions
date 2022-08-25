@@ -12,6 +12,19 @@
 #include <Wire.h>
 #include "Adafruit_ADT7410.h"
 
+// TFT Screen
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
+#include "Adafruit_miniTFTWing.h"
+
+#include <SPI.h>
+
+#define TFT_CS         14
+#define TFT_DC         32
+#define TFT_RST        -1
+Adafruit_miniTFTWing ss;
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
+
 // Create the ADT7410 temperature sensor object
 Adafruit_ADT7410 tempsensor = Adafruit_ADT7410();
 
@@ -43,6 +56,20 @@ void setup() {
     Serial.println("SPIFFS Mount Failed");
     return;
   }
+
+  if (!ss.begin()) {
+    Serial.println("seesaw init error!");
+    while (1);
+  }
+  else Serial.println("seesaw started");
+
+
+  tft.setRotation(3);
+
+  ss.tftReset();
+  ss.setBacklight(0x0); //set the backlight fully on
+  tft.initR(INITR_MINI160x80);   // initialize a ST7735S chip, mini display
+  tft.fillScreen(ST77XX_BLACK);
 
   // Wifi Configuration
   WiFi.begin(ssid, password);
@@ -85,7 +112,7 @@ void loop() {
 
 float readTemp() {
   float c = tempsensor.readTempC();
-  return(c);
+  return (c);
 }
 
 
