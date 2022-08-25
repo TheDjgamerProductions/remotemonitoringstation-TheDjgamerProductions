@@ -75,6 +75,14 @@ void loop() {
 }
 
 
+
+void temperature() {
+
+  
+}
+
+
+
 void builtinLED() {
   if (LEDOn) {
     digitalWrite(LED_BUILTIN, HIGH);
