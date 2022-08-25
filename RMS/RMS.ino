@@ -8,6 +8,13 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
+// Temp Sensor
+#include <Wire.h>
+#include "Adafruit_ADT7410.h"
+
+// Create the ADT7410 temperature sensor object
+Adafruit_ADT7410 tempsensor = Adafruit_ADT7410();
+
 AsyncWebServer server(80);
 
 
@@ -76,12 +83,19 @@ void loop() {
 
 
 
-void temperature() {
-
-  
+float readTemp() {
+  float c = tempsensor.readTempC();
+  return(c);
 }
 
 
+void tftDrawText(char *text, uint16_t color) {
+  tft.fillScreen(ST77XX_BLACK);
+  tft.setCursor(0, 0);
+  tft.setTextColor(color);
+  tft.setTextWrap(true);
+  tft.print(text);
+}
 
 void builtinLED() {
   if (LEDOn) {
