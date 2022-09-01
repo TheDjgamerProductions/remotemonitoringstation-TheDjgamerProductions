@@ -1,5 +1,6 @@
 #include "sensitiveInformation.h"
 
+
 #define FORMAT_SPIFFS_IF_FAILED true
 
 // Wifi & Webserver
@@ -25,30 +26,52 @@
 Adafruit_miniTFTWing ss;
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS,  TFT_DC, TFT_RST);
 
+// Date and time functions using a PCF8523 RTC connected via I2C and Wire lib
+#include "RTClib.h"
+
+RTC_PCF8523 rtc;
+
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
 // Create the ADT7410 temperature sensor object
 Adafruit_ADT7410 tempsensor = Adafruit_ADT7410();
 
 AsyncWebServer server(80);
 
 
-// RTC Start - Remove if unnecessary
-#include "RTClib.h"
+//Motor Setup
 
-RTC_PCF8523 rtc;
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+#include <Adafruit_MotorShield.h>
 
-// RTC End
+// Create the motor shield object with the default I2C address
+Adafruit_MotorShield AFMS = Adafruit_MotorShield();
+// Or, create it with a different I2C address (say for stacking)
+// Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x61);
+
+// Select which 'port' M1, M2, M3 or M4. In this case, M1
+Adafruit_DCMotor *myMotor = AFMS.getMotor(4);
+// You can also make another motor on port M2
+//Adafruit_DCMotor *myOtherMotor = AFMS.getMotor(2);
+
 
 boolean LEDOn = false; // State of Built-in LED true=on, false=off.
 #define LOOPDELAY 100
 
 
 void setup() {
+  Serial.println("Start of setup");
   Serial.begin(9600);
   while (!Serial) {
     delay(10);
   }
   delay(1000);
+
+  if (!AFMS.begin()) {         // create with the default frequency 1.6KHz
+    // if (!AFMS.begin(1000)) {  // OR with a different frequency, say 1KHz
+    Serial.println("Could not find Motor Shield. Check wiring.");
+    while (1);
+  }
+  Serial.println("Motor Shield found.");
 
   if (!SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
     // Follow instructions in README and install
@@ -64,12 +87,14 @@ void setup() {
   else Serial.println("seesaw started");
 
 
-  tft.setRotation(3);
+  tft.setRotation(0);
 
   ss.tftReset();
   ss.setBacklight(0x0); //set the backlight fully on
   tft.initR(INITR_MINI160x80);   // initialize a ST7735S chip, mini display
   tft.fillScreen(ST77XX_BLACK);
+  Serial.println("TFT set");
+
 
   // Wifi Configuration
   WiFi.begin(ssid, password);
@@ -86,39 +111,98 @@ void setup() {
 
   server.begin();
 
-  // RTC
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
     Serial.flush();
-    //    abort();
+    while (1) delay(10);
   }
 
-  // The following line can be uncommented if the time needs to be reset.
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-  rtc.start();
-  pinMode(LED_BUILTIN, OUTPUT);
+  if (! rtc.initialized() || rtc.lostPower()) {
+    Serial.println("RTC is NOT initialized, let's set the time!");
+    // When time needs to be set on a new device, or after a power loss, the
+    // following line sets the RTC to the date & time this sketch was compiled
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+    //
+    // Note: allow 2 seconds after inserting battery or applying external power
+    // without battery before calling adjust(). This gives the PCF8523's
+    // crystal oscillator time to stabilize. If you call adjust() very quickly
+    // after the RTC is powered, lostPower() may still return true.
+  }
 
+  // When time needs to be re-set on a previously configured device, the
+  // following line sets the RTC to the date & time this sketch was compiled
+  // This line sets the RTC with an explicit date & time, for example to set
+  // January 21, 2014 at 3am you would call:
+  // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+
+  // When the RTC was stopped and stays connected to the battery, it has
+  // to be restarted by clearing the STOP bit. Let's do this to ensure
+  // the RTC is running.
+  rtc.start();
+
+  // The PCF8523 can be calibrated for:
+  //        - Aging adjustment
+  //        - Temperature compensation
+  //        - Accuracy tuning
+  // The offset mode to use, once every two hours or once every minute.
+  // The offset Offset value from -64 to +63. See the Application Note for calculation of offset values.
+  // https://www.nxp.com/docs/en/application-note/AN11247.pdf
+  // The deviation in parts per million can be calculated over a period of observation. Both the drift (which can be negative)
+  // and the observation period must be in seconds. For accuracy the variation should be observed over about 1 week.
+  // Note: any previous calibration should cancelled prior to any new observation period.
+  // Example - RTC gaining 43 seconds in 1 week
+  float drift = 43; // seconds plus or minus over oservation period - set to 0 to cancel previous calibration.
+  float period_sec = (7 * 86400);  // total obsevation period in seconds (86400 = seconds in 1 day:  7 days = (7 * 86400) seconds )
+  float deviation_ppm = (drift / period_sec * 1000000); //  deviation in parts per million (μs)
+  float drift_unit = 4.34; // use with offset mode PCF8523_TwoHours
+  // float drift_unit = 4.069; //For corrections every min the drift_unit is 4.069 ppm (use with offset mode PCF8523_OneMinute)
+  int offset = round(deviation_ppm / drift_unit);
+  // rtc.calibrate(PCF8523_TwoHours, offset); // Un-comment to perform calibration once drift (seconds) and observation period (seconds) are correct
+  // rtc.calibrate(PCF8523_TwoHours, 0); // Un-comment to cancel previous calibration
+
+  if (!tempsensor.begin()) {
+    Serial.println("Couldn't find ADT7410!");
+    while (1);
+  }
+  pinMode(LED_BUILTIN, OUTPUT);
 }
 
 void loop() {
-
   builtinLED();
-
-
+  tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
+  fanController(29.00);
   delay(LOOPDELAY); // To allow time to publish new code.
 }
 
 
 
-float readTemp() {
+String readTempature() {
   float c = tempsensor.readTempC();
-  return (c);
+  String cString = String(c);
+  return (cString);
+}
+
+void fanController(float tempatureThreshold) {
+  float currentTemp = tempsensor.readTempC(); 
+  if (currentTemp > tempatureThreshold) {
+    myMotor->setSpeed(150);
+    myMotor->run(FORWARD);
+  }
+  else {
+        myMotor->run(RELEASE);
+  }
+
+
 }
 
 
-void tftDrawText(char *text, uint16_t color) {
+void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
   tft.fillScreen(ST77XX_BLACK);
-  tft.setCursor(0, 0);
+  tft.setCursor(x, y);
+  tft.setTextSize(textSize);
   tft.setTextColor(color);
   tft.setTextWrap(true);
   tft.print(text);
@@ -131,6 +215,7 @@ void builtinLED() {
     digitalWrite(LED_BUILTIN, LOW);
   }
 }
+
 
 void logEvent(String dataToLog) {
   /*
