@@ -1,3 +1,17 @@
+//Pin Definitions
+#define greenLED 27
+#define yellowLED 33
+#define redLED 15
+
+
+
+
+
+
+
+
+
+
 #include "sensitiveInformation.h"
 
 
@@ -8,6 +22,8 @@
 #include "SPIFFS.h"
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+
+
 
 // Temp Sensor
 #include <Wire.h>
@@ -57,6 +73,15 @@ Adafruit_DCMotor *myMotor = AFMS.getMotor(4);
 boolean LEDOn = false; // State of Built-in LED true=on, false=off.
 #define LOOPDELAY 100
 
+// ESP32Servo Start
+#include <ESP32Servo.h>
+Servo myservo;  // create servo object to control a servo
+int servoPin = 12;
+int blindHight = 0;
+// ESP32Servo End
+
+
+
 
 void setup() {
   Serial.println("Start of setup");
@@ -66,6 +91,14 @@ void setup() {
   }
   delay(1000);
 
+  // ESP32Servo Start
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+  myservo.setPeriodHertz(50);    // standard 50 hz servo
+  myservo.attach(servoPin, 1000, 2000); // attaches the servo on pin 18 to the servo object
+  // ESP32Servo End
   if (!AFMS.begin()) {         // create with the default frequency 1.6KHz
     // if (!AFMS.begin(1000)) {  // OR with a different frequency, say 1KHz
     Serial.println("Could not find Motor Shield. Check wiring.");
@@ -172,6 +205,7 @@ void setup() {
 
 void loop() {
   builtinLED();
+  windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
   fanController(29.00);
   delay(LOOPDELAY); // To allow time to publish new code.
@@ -186,13 +220,13 @@ String readTempature() {
 }
 
 void fanController(float tempatureThreshold) {
-  float currentTemp = tempsensor.readTempC(); 
+  float currentTemp = tempsensor.readTempC();
   if (currentTemp > tempatureThreshold) {
     myMotor->setSpeed(150);
     myMotor->run(FORWARD);
   }
   else {
-        myMotor->run(RELEASE);
+    myMotor->run(RELEASE);
   }
 
 
@@ -215,6 +249,31 @@ void builtinLED() {
     digitalWrite(LED_BUILTIN, LOW);
   }
 }
+
+
+void windowBlinds() {
+  uint32_t buttons = ss.readButtons();
+  if (! (buttons & TFTWING_BUTTON_UP)) {
+    myservo.write(blindHight);
+    if (blindHight == 180) {
+
+    }
+    else {
+      blindHight += 5;
+    }
+  }
+
+  else if (! (buttons & TFTWING_BUTTON_DOWN)) {
+    myservo.write(blindHight);
+    if (blindHight == 0) {
+
+    }
+    else {
+      blindHight -= 5;
+    }
+  }
+}
+
 
 
 void logEvent(String dataToLog) {
