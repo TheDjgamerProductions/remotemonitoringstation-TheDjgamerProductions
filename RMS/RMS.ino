@@ -1,14 +1,14 @@
 //Pin Definitions
-#define greenLED 27
-#define yellowLED 33
-#define redLED 15
+#define rfidRst 14
+#define rfidNss 13
 
 
 
 
 
-
-
+//RFID
+#include <MFRC522.h>
+//MFRC522 mfrc522(rfidNss, rfidRst);
 
 
 
@@ -90,6 +90,11 @@ void setup() {
     delay(10);
   }
   delay(1000);
+  //RFID
+//  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0)); //set parameters
+//  SPI.begin(); // init SPI
+//  delay(10);
+//  mfrc522.PCD_Init(); // Init MFRC522 card
 
   // ESP32Servo Start
   ESP32PWM::allocateTimer(0);
@@ -204,6 +209,7 @@ void setup() {
 }
 
 void loop() {
+  //RFID();
   builtinLED();
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
@@ -259,7 +265,7 @@ void windowBlinds() {
 
     }
     else {
-      blindHight += 5;
+      blindHight += 10;
     }
   }
 
@@ -269,11 +275,23 @@ void windowBlinds() {
 
     }
     else {
-      blindHight -= 5;
+      blindHight -= 10;
     }
   }
 }
 
+//
+//void RFID() {
+//  if ( mfrc522.PICC_IsNewCardPresent()) {
+//    Serial.println("Card present");
+//    // Select one of the cards
+//    if ( mfrc522.PICC_ReadCardSerial()) {
+//      Serial.println("Data available");
+//      // Dump debug info about the card. PICC_HaltA() is automatically called.
+//      mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+//    }
+//  }
+//}
 
 
 void logEvent(String dataToLog) {
