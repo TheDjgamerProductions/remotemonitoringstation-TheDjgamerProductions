@@ -1,3 +1,7 @@
+//RFID https://hanixdiy.blogspot.com/2019/11/huzzah32-rfid-base-module.html
+
+
+
 //Pin Definitions
 #define rfidRst 14
 #define rfidNss 13
