@@ -1,18 +1,20 @@
 //RFID https://hanixdiy.blogspot.com/2019/11/huzzah32-rfid-base-module.html
 
-
+String validCardUID = "211 147 150 26";
 
 //Pin Definitions
-#define rfidRst 14
-#define rfidNss 13
-
+#define SS_PIN  21  // ES32 Feather
+#define RST_PIN 17 // esp32 Feather. Could be others.
+#define redLED 13
+#define greenLED 12
 
 
 
 
 //RFID
 #include <MFRC522.h>
-//MFRC522 mfrc522(rfidNss, rfidRst);
+MFRC522 rfid(SS_PIN, RST_PIN);
+
 
 
 
@@ -88,6 +90,8 @@ int blindHight = 0;
 
 
 void setup() {
+  pinMode(redLED, OUTPUT);
+  pinMode(greenLED, OUTPUT);
   Serial.println("Start of setup");
   Serial.begin(9600);
   while (!Serial) {
@@ -95,10 +99,10 @@ void setup() {
   }
   delay(1000);
   //RFID
-//  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0)); //set parameters
-//  SPI.begin(); // init SPI
-//  delay(10);
-//  mfrc522.PCD_Init(); // Init MFRC522 card
+  //  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0)); //set parameters
+  //  SPI.begin(); // init SPI
+  //  delay(10);
+  //  mfrc522.PCD_Init(); // Init MFRC522 card
 
   // ESP32Servo Start
   ESP32PWM::allocateTimer(0);
@@ -139,20 +143,20 @@ void setup() {
 
 
   // Wifi Configuration
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi..");
-  }
-  Serial.println();
-  Serial.print("Connected to the Internet");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-
-  routesConfiguration(); // Reads routes from routesManagement
-
-  server.begin();
-
+  //  WiFi.begin(ssid, password);
+  //  while (WiFi.status() != WL_CONNECTED) {
+  //    delay(1000);
+  //    Serial.println("Connecting to WiFi..");
+  //  }
+  //  Serial.println();
+  //  Serial.print("Connected to the Internet");
+  //  Serial.print("IP address: ");
+  //  Serial.println(WiFi.localIP());
+  //
+  //  routesConfiguration(); // Reads routes from routesManagement
+  //
+  //  server.begin();
+  rfid.PCD_Init(); // init MFRC522
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
     Serial.flush();
@@ -213,7 +217,7 @@ void setup() {
 }
 
 void loop() {
-  //RFID();
+  safeController();
   builtinLED();
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
@@ -284,19 +288,44 @@ void windowBlinds() {
   }
 }
 
-//
-//void RFID() {
-//  if ( mfrc522.PICC_IsNewCardPresent()) {
-//    Serial.println("Card present");
-//    // Select one of the cards
-//    if ( mfrc522.PICC_ReadCardSerial()) {
-//      Serial.println("Data available");
-//      // Dump debug info about the card. PICC_HaltA() is automatically called.
-//      mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
-//    }
-//  }
-//}
 
+String readRFID() {
+  String uidOfCardRead = "";
+  if (rfid.PICC_IsNewCardPresent()) { // new tag is available
+    if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
+      MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
+      Serial.print("RFID/NFC Tag Type: ");
+      Serial.println(rfid.PICC_GetTypeName(piccType));
+
+      // print UID in Serial Monitor in the hex format
+      Serial.print("UID:");
+      for (int i = 0; i < rfid.uid.size; i++) {
+        uidOfCardRead += rfid.uid.uidByte[i] < 0x10 ? " 0" : " ";
+        uidOfCardRead += rfid.uid.uidByte[i];
+      }
+      Serial.println();
+
+      rfid.PICC_HaltA(); // halt PICC
+      rfid.PCD_StopCrypto1(); // stop encryption on PCD
+    }
+  }
+  uidOfCardRead.trim();
+  return(uidOfCardRead);
+}
+
+void safeController() {
+  if (readRFID() == validCardUID) {
+    Serial.println("Unlock");
+    digitalWrite(greenLED, HIGH);
+    digitalWrite(redLED, LOW);
+  }
+  else {
+    Serial.println("lick");
+    digitalWrite(greenLED, HIGH);
+    digitalWrite(redLED, LOW);    
+  }
+  
+}
 
 void logEvent(String dataToLog) {
   /*
