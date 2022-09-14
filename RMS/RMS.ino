@@ -1,12 +1,14 @@
 //RFID https://hanixdiy.blogspot.com/2019/11/huzzah32-rfid-base-module.html
 
 String validCardUID = "211 147 150 26";
+bool safeLocked = true;
+
 
 //Pin Definitions
 #define SS_PIN  21  // ES32 Feather
 #define RST_PIN 17 // esp32 Feather. Could be others.
-#define redLED 13
-#define greenLED 12
+#define redLED 27
+#define greenLED 33
 
 
 
@@ -98,11 +100,7 @@ void setup() {
     delay(10);
   }
   delay(1000);
-  //RFID
-  //  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0)); //set parameters
-  //  SPI.begin(); // init SPI
-  //  delay(10);
-  //  mfrc522.PCD_Init(); // Init MFRC522 card
+
 
   // ESP32Servo Start
   ESP32PWM::allocateTimer(0);
@@ -142,20 +140,20 @@ void setup() {
   Serial.println("TFT set");
 
 
-  // Wifi Configuration
-  //  WiFi.begin(ssid, password);
-  //  while (WiFi.status() != WL_CONNECTED) {
-  //    delay(1000);
-  //    Serial.println("Connecting to WiFi..");
-  //  }
-  //  Serial.println();
-  //  Serial.print("Connected to the Internet");
-  //  Serial.print("IP address: ");
-  //  Serial.println(WiFi.localIP());
-  //
-  //  routesConfiguration(); // Reads routes from routesManagement
-  //
-  //  server.begin();
+  Wifi Configuration
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi..");
+  }
+  Serial.println();
+  Serial.print("Connected to the Internet");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  routesConfiguration(); // Reads routes from routesManagement
+
+  server.begin();
   rfid.PCD_Init(); // init MFRC522
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
@@ -218,6 +216,7 @@ void setup() {
 
 void loop() {
   safeController();
+  safeUnlocker();
   builtinLED();
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
@@ -228,6 +227,12 @@ void loop() {
 
 
 String readTempature() {
+  /*
+     Read the Tempature off of the sensor
+     and returns it as a string
+     @param: NULL
+     @return: String
+  */
   float c = tempsensor.readTempC();
   String cString = String(c);
   return (cString);
@@ -248,6 +253,12 @@ void fanController(float tempatureThreshold) {
 
 
 void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
+  /*
+   * Draw given text on screen
+   * at given x,y and at given size
+   * @pram Text String x int (X position of text) y (Y position of text) int textSize int
+   * @return: void
+   */
   tft.fillScreen(ST77XX_BLACK);
   tft.setCursor(x, y);
   tft.setTextSize(textSize);
@@ -257,6 +268,14 @@ void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
 }
 
 void builtinLED() {
+  /*
+   * Used for turn on and off the led
+   * when the user request so 
+   * through the website
+   * 
+   * @pram: void
+   * @return: void
+   */
   if (LEDOn) {
     digitalWrite(LED_BUILTIN, HIGH);
   } else {
@@ -266,6 +285,15 @@ void builtinLED() {
 
 
 void windowBlinds() {
+  /*
+   * When the user uses the joystick on the screen
+   * open the window blids (Servo) by 10
+   * if the windows are at their max limit 
+   * stop the user from being able to change the blinds hight
+   * @pram void
+   * @return: void
+   * 
+   */
   uint32_t buttons = ss.readButtons();
   if (! (buttons & TFTWING_BUTTON_UP)) {
     myservo.write(blindHight);
@@ -290,41 +318,69 @@ void windowBlinds() {
 
 
 String readRFID() {
+  /*
+   * Read the RFID UID of the RFID chip on the reader
+   * @param: Void
+   * @return: String
+   */
   String uidOfCardRead = "";
-  if (rfid.PICC_IsNewCardPresent()) { // new tag is available
-    if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
-      MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
-      Serial.print("RFID/NFC Tag Type: ");
-      Serial.println(rfid.PICC_GetTypeName(piccType));
 
-      // print UID in Serial Monitor in the hex format
-      Serial.print("UID:");
-      for (int i = 0; i < rfid.uid.size; i++) {
-        uidOfCardRead += rfid.uid.uidByte[i] < 0x10 ? " 0" : " ";
-        uidOfCardRead += rfid.uid.uidByte[i];
-      }
-      Serial.println();
+  MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
+  Serial.print("RFID/NFC Tag Type: ");
+  Serial.println(rfid.PICC_GetTypeName(piccType));
 
-      rfid.PICC_HaltA(); // halt PICC
-      rfid.PCD_StopCrypto1(); // stop encryption on PCD
-    }
+  // print UID in Serial Monitor in the hex format
+  Serial.print("UID:");
+  for (int i = 0; i < rfid.uid.size; i++) {
+    uidOfCardRead += rfid.uid.uidByte[i] < 0x10 ? " 0" : " ";
+    uidOfCardRead += rfid.uid.uidByte[i];
   }
+  Serial.println();
+
+  rfid.PICC_HaltA(); // halt PICC
+  rfid.PCD_StopCrypto1(); // stop encryption on PCD
+
   uidOfCardRead.trim();
-  return(uidOfCardRead);
+  return (uidOfCardRead);
 }
 
 void safeController() {
-  if (readRFID() == validCardUID) {
-    Serial.println("Unlock");
-    digitalWrite(greenLED, HIGH);
-    digitalWrite(redLED, LOW);
+  /*
+   * Checks if the RFID on the reader matches the trusted UID
+   * to unlock the safe
+   * @param: Void
+   * @return: void
+   */
+  if (rfid.PICC_IsNewCardPresent()) { // new tag is available
+    if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
+      if (readRFID() == validCardUID) {
+        safeLocked = !safeLocked;
+        Serial.println(safeLocked);
+      }
+      else {
+        Serial.println("worng card");
+      }
+
+    }
+  }
+}
+
+void safeUnlocker() {
+  /*
+   * Checks if the safeLocked var is ture or false
+   * if ture lock the safe
+   * if false unlock the safe
+   * @param: Void
+   * @return: void
+   */
+  if (safeLocked) {
+    digitalWrite(redLED, HIGH);
+    digitalWrite(greenLED, LOW);
   }
   else {
-    Serial.println("lick");
+    digitalWrite(redLED, LOW);
     digitalWrite(greenLED, HIGH);
-    digitalWrite(redLED, LOW);    
   }
-  
 }
 
 void logEvent(String dataToLog) {
