@@ -94,13 +94,13 @@ int blindHight = 0;
 void setup() {
   pinMode(redLED, OUTPUT);
   pinMode(greenLED, OUTPUT);
-  Serial.println("Start of setup");
+
   Serial.begin(9600);
   while (!Serial) {
     delay(10);
   }
   delay(1000);
-
+  Serial.println("Start of setup");
 
   // ESP32Servo Start
   ESP32PWM::allocateTimer(0);
@@ -138,9 +138,7 @@ void setup() {
   tft.initR(INITR_MINI160x80);   // initialize a ST7735S chip, mini display
   tft.fillScreen(ST77XX_BLACK);
   Serial.println("TFT set");
-
-
-  Wifi Configuration
+  Serial.println("Start wifi");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
@@ -212,6 +210,7 @@ void setup() {
     while (1);
   }
   pinMode(LED_BUILTIN, OUTPUT);
+  logEvent("System Startup");
 }
 
 void loop() {
@@ -254,11 +253,11 @@ void fanController(float tempatureThreshold) {
 
 void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
   /*
-   * Draw given text on screen
-   * at given x,y and at given size
-   * @pram Text String x int (X position of text) y (Y position of text) int textSize int
-   * @return: void
-   */
+     Draw given text on screen
+     at given x,y and at given size
+     @pram Text String x int (X position of text) y (Y position of text) int textSize int
+     @return: void
+  */
   tft.fillScreen(ST77XX_BLACK);
   tft.setCursor(x, y);
   tft.setTextSize(textSize);
@@ -269,13 +268,13 @@ void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
 
 void builtinLED() {
   /*
-   * Used for turn on and off the led
-   * when the user request so 
-   * through the website
-   * 
-   * @pram: void
-   * @return: void
-   */
+     Used for turn on and off the led
+     when the user request so
+     through the website
+
+     @pram: void
+     @return: void
+  */
   if (LEDOn) {
     digitalWrite(LED_BUILTIN, HIGH);
   } else {
@@ -286,14 +285,14 @@ void builtinLED() {
 
 void windowBlinds() {
   /*
-   * When the user uses the joystick on the screen
-   * open the window blids (Servo) by 10
-   * if the windows are at their max limit 
-   * stop the user from being able to change the blinds hight
-   * @pram void
-   * @return: void
-   * 
-   */
+     When the user uses the joystick on the screen
+     open the window blids (Servo) by 10
+     if the windows are at their max limit
+     stop the user from being able to change the blinds hight
+     @pram void
+     @return: void
+
+  */
   uint32_t buttons = ss.readButtons();
   if (! (buttons & TFTWING_BUTTON_UP)) {
     myservo.write(blindHight);
@@ -301,6 +300,7 @@ void windowBlinds() {
 
     }
     else {
+      logEvent("Blinds Up");
       blindHight += 10;
     }
   }
@@ -311,6 +311,7 @@ void windowBlinds() {
 
     }
     else {
+      logEvent("Blinds Down");
       blindHight -= 10;
     }
   }
@@ -319,10 +320,10 @@ void windowBlinds() {
 
 String readRFID() {
   /*
-   * Read the RFID UID of the RFID chip on the reader
-   * @param: Void
-   * @return: String
-   */
+     Read the RFID UID of the RFID chip on the reader
+     @param: Void
+     @return: String
+  */
   String uidOfCardRead = "";
 
   MFRC522::PICC_Type piccType = rfid.PICC_GetType(rfid.uid.sak);
@@ -346,16 +347,21 @@ String readRFID() {
 
 void safeController() {
   /*
-   * Checks if the RFID on the reader matches the trusted UID
-   * to unlock the safe
-   * @param: Void
-   * @return: void
-   */
+     Checks if the RFID on the reader matches the trusted UID
+     to unlock the safe
+     @param: Void
+     @return: void
+  */
   if (rfid.PICC_IsNewCardPresent()) { // new tag is available
     if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
       if (readRFID() == validCardUID) {
         safeLocked = !safeLocked;
-        Serial.println(safeLocked);
+        if (safeLocked == 1){
+          logEvent("Safe Locked");
+        }
+        else {
+          logEvent("Safe Unlocked");
+        }
       }
       else {
         Serial.println("worng card");
@@ -367,12 +373,12 @@ void safeController() {
 
 void safeUnlocker() {
   /*
-   * Checks if the safeLocked var is ture or false
-   * if ture lock the safe
-   * if false unlock the safe
-   * @param: Void
-   * @return: void
-   */
+     Checks if the safeLocked var is ture or false
+     if ture lock the safe
+     if false unlock the safe
+     @param: Void
+     @return: void
+  */
   if (safeLocked) {
     digitalWrite(redLED, HIGH);
     digitalWrite(greenLED, LOW);
@@ -384,6 +390,7 @@ void safeUnlocker() {
 }
 
 void logEvent(String dataToLog) {
+  Serial.println("About to log data");
   /*
      Log entries to a file stored in SPIFFS partition on the ESP32.
   */
