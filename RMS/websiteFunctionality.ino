@@ -55,6 +55,11 @@ void routesConfiguration() {
     logEvent("Log Event Download");
     request->send(SPIFFS, "/logEvents.csv", "text/html", true);
   });
+
+
+  server.onNotFound([](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/404.html");
+  });
 }
 
 String getDateTime() {
@@ -78,6 +83,12 @@ String processor(const String& var) {
     return datetime;
   }
 
-  // Default "catch" which will return nothing in case the HTML has no variable to replace.
-  return String();
+
+  if (var == "TEMPERATURE") {
+    return String(tempsensor.readTempC());
+  }
+
+
+// Default "catch" which will return nothing in case the HTML has no variable to replace.
+return String();
 }
