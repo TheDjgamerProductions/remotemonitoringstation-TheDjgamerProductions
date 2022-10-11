@@ -4,6 +4,9 @@ String validCardUID = "211 147 150 26";
 bool safeLocked = true;
 
 
+bool fanEnabled = false;
+bool autoFanEnabled = true;
+
 //Pin Definitions
 #define SS_PIN  21  // ES32 Feather
 #define RST_PIN 17 // esp32 Feather. Could be others.
@@ -219,7 +222,10 @@ void loop() {
   builtinLED();
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
-  fanController(29.00);
+  if (autoFanEnabled) {
+  autoFanController(29.00);
+  }
+  fanController();
   delay(LOOPDELAY); // To allow time to publish new code.
 }
 
@@ -237,16 +243,26 @@ String readTempature() {
   return (cString);
 }
 
-void fanController(float tempatureThreshold) {
+void autoFanController(float tempatureThreshold) {
   float currentTemp = tempsensor.readTempC();
   if (currentTemp > tempatureThreshold) {
+    fanEnabled = true;
+  }
+  else {
+    fanEnabled = false;
+  }
+
+
+}
+
+void fanController() {
+  if (fanEnabled) {
     myMotor->setSpeed(150);
     myMotor->run(FORWARD);
   }
   else {
     myMotor->run(RELEASE);
   }
-
 
 }
 
@@ -356,7 +372,7 @@ void safeController() {
     if (rfid.PICC_ReadCardSerial()) { // NUID has been readed
       if (readRFID() == validCardUID) {
         safeLocked = !safeLocked;
-        if (safeLocked == 1){
+        if (safeLocked == 1) {
           logEvent("Safe Locked");
         }
         else {

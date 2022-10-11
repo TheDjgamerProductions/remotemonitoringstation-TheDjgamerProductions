@@ -29,6 +29,13 @@ void routesConfiguration() {
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
+  server.on("/adminDashboard.html", HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(admin_username, admin_password))
+      return request->requestAuthentication();
+    logEvent("Admin Login");
+    request->send(SPIFFS, "/adminDashboard.html", "text/html", false, processor);
+  });
+
 
   // Example of route with authentication, and use of processor
   // Also demonstrates how to have arduino functionality included (turn LED on)
@@ -54,6 +61,49 @@ void routesConfiguration() {
       return request->requestAuthentication();
     logEvent("Log Event Download");
     request->send(SPIFFS, "/logEvents.csv", "text/html", true);
+  });
+
+
+  server.on("/SafeLock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    safeLocked = true;
+    logEvent("Safe Locked via Website");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
+
+
+  server.on("/FanOn",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    fanEnabled = true;
+    logEvent("Fan on via Website");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
+
+
+  server.on("/FanOff",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    fanEnabled = false;
+    logEvent("Fan Off via Website");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
+
+  server.on("/FanControl",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    autoFanEnabled = !autoFanEnabled;
+    logEvent("Fan Off via Website");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
+
+  server.on("/SafeUnlock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(http_username, http_password))
+      return request->requestAuthentication();
+    safeLocked = false;
+    logEvent("Safe Unlocked via Website");
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
 
@@ -88,7 +138,20 @@ String processor(const String& var) {
     return String(tempsensor.readTempC());
   }
 
-
-// Default "catch" which will return nothing in case the HTML has no variable to replace.
-return String();
+if (var == "FANCONTROL") {
+  if (autoFanEnabled) {
+    return "Automatic";
+  } else {
+    return "Manual";
+  }
+}
+if (var == "INVFANCONTROL") {
+  if (autoFanEnabled) {
+    return "Manual";
+  } else {
+    return "Automatic";
+  }
+}
+  // Default "catch" which will return nothing in case the HTML has no variable to replace.
+  return String();
 }
