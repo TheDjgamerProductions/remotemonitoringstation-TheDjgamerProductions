@@ -134,23 +134,28 @@ void setup() {
   else Serial.println("seesaw started");
 
 
-  tft.setRotation(0);
+  
 
   ss.tftReset();
   ss.setBacklight(0x0); //set the backlight fully on
   tft.initR(INITR_MINI160x80);   // initialize a ST7735S chip, mini display
   tft.fillScreen(ST77XX_BLACK);
+  tft.setRotation(3);
   Serial.println("TFT set");
   Serial.println("Start wifi");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi..");
+    tftDrawText("Connecting to WiFi...",ST77XX_WHITE,0,0,2);
   }
+  tft.fillScreen(ST77XX_BLACK);
   Serial.println();
   Serial.print("Connected to the Internet");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+  String ipString = WiFi.localIP().toString();
+  tftDrawText(ipString,ST77XX_WHITE,0,60,2);
 
   routesConfiguration(); // Reads routes from routesManagement
 
@@ -223,7 +228,7 @@ void loop() {
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
   if (autoFanEnabled) {
-  autoFanController(29.00);
+  autoFanController(25.00);
   }
   fanController();
   delay(LOOPDELAY); // To allow time to publish new code.
@@ -274,10 +279,10 @@ void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
      @pram Text String x int (X position of text) y (Y position of text) int textSize int
      @return: void
   */
-  tft.fillScreen(ST77XX_BLACK);
+  //tft.fillScreen(ST77XX_BLACK);
   tft.setCursor(x, y);
   tft.setTextSize(textSize);
-  tft.setTextColor(color);
+  tft.setTextColor(color,ST77XX_BLACK);
   tft.setTextWrap(true);
   tft.print(text);
 }
