@@ -116,6 +116,7 @@ void setup() {
   if (!AFMS.begin()) {         // create with the default frequency 1.6KHz
     // if (!AFMS.begin(1000)) {  // OR with a different frequency, say 1KHz
     Serial.println("Could not find Motor Shield. Check wiring.");
+    logEvent("MOTOR FAILED");
     while (1);
   }
   Serial.println("Motor Shield found.");
@@ -124,11 +125,13 @@ void setup() {
     // Follow instructions in README and install
     // https://github.com/me-no-dev/arduino-esp32fs-plugin
     Serial.println("SPIFFS Mount Failed");
+    logEvent("SPIFFS FAILED");
     return;
   }
 
   if (!ss.begin()) {
     Serial.println("seesaw init error!");
+    logEvent("SEESAW FAILED");
     while (1);
   }
   else Serial.println("seesaw started");
@@ -163,6 +166,7 @@ void setup() {
   rfid.PCD_Init(); // init MFRC522
   if (! rtc.begin()) {
     Serial.println("Couldn't find RTC");
+    logEvent("RTC FAILED");
     Serial.flush();
     while (1) delay(10);
   }
@@ -215,6 +219,7 @@ void setup() {
 
   if (!tempsensor.begin()) {
     Serial.println("Couldn't find ADT7410!");
+    logEvent("Couldn't find ADT7410!");
     while (1);
   }
   pinMode(LED_BUILTIN, OUTPUT);
@@ -276,7 +281,7 @@ void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
   /*
      Draw given text on screen
      at given x,y and at given size
-     @pram Text String x int (X position of text) y (Y position of text) int textSize int
+     @pram Text String x int (X position of text) y int (Y position of text) textSize int
      @return: void
   */
   //tft.fillScreen(ST77XX_BLACK);
@@ -385,6 +390,7 @@ void safeController() {
         }
       }
       else {
+        logEvent("Safe unlocked atempted, Worng Card");
         Serial.println("worng card");
       }
 

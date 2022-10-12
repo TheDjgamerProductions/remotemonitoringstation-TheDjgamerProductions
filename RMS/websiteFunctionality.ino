@@ -94,7 +94,7 @@ void routesConfiguration() {
     if (!request->authenticate(http_username, http_password))
       return request->requestAuthentication();
     autoFanEnabled = !autoFanEnabled;
-    logEvent("Fan Off via Website");
+    logEvent("Fan state toggled via Website");
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
@@ -147,7 +147,7 @@ if (var == "FANCONTROL") {
 }
 if (var == "INVFANCONTROL") {
   if (autoFanEnabled) {
-    return "Manual";
+    return "  ";
   } else {
     return "Automatic";
   }

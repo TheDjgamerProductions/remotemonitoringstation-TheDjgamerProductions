@@ -49,20 +49,31 @@
         <p>Fan Control</p>
         <p id="FanState">%FANCONTROL%</p>
         <p><a href="/FanControl">Make fan %INVFANCONTROL%</a></p>
-        <div id="FanControls">
+        <div id="ManFanControls">
             <p><a href="/FanOn">Turn fan on</a></p>
             <p><a href="/FanOff">Turn fan off</a></p>
         </div>
-        <script type="text/javascript">
+        <div>  
+            <input type="number"><span>℃</span>
+
+
+
+        </div>  
+       
+       
+       
+       
+       
+       <script type="text/javascript">
             var fanState = document.getElementById("FanState")
             console.log(fanState.innerHTML)
             if(fanState.innerHTML == "Manual") {
                 console.log("Fan is man");
-                document.getElementById('FanControls').style.display = "inline";
+                document.getElementById('ManFanControls').style.display = "inline";
             }
             else {
                 console.log("Fan is auto");
-                document.getElementById('FanControls').style.display = "none";
+                document.getElementById('ManFanControls').style.display = "none";
             }
 
 </script>
