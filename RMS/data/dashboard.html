@@ -2,6 +2,18 @@
 <html>
 
 <head>
+    <!-- <script type="text/javascript">
+        function hideDiv() {
+            var fanState = document.getElementById("FanState")
+            console.log(fanState.innerHTML)
+            if(fanState == "Manual")
+                //document.getElementById('FanControls').style.visibility = "show";
+                console.log("Fan is manual");
+            else
+                console.log("Fan is auto");
+                document.getElementById('FanControls').style.display = "none";
+        }
+        </script> -->
     <meta charset="UTF-8">
     <title>Dashboard</title>
     <link rel="stylesheet" href="arduino.css">
@@ -28,17 +40,32 @@
         <p>%TEMPERATURE%℃</p>
     </div>
     <div>  
+        <p>Safe %SAFESTATE%</p>
         <p><a href="/SafeLock">Lock Safe</a></p>
         <p><a href="/SafeUnlock">Unlock Safe</a></p>
 
     </div>
     <div>  
         <p>Fan Control</p>
-        <p>%FANCONTROL%</p>
+        <p id="FanState">%FANCONTROL%</p>
         <p><a href="/FanControl">Make fan %INVFANCONTROL%</a></p>
-        <p><a href="/FanOn">Turn fan on</a></p>
-        <p><a href="/FanOff">Turn fan off</a></p>
+        <div id="FanControls">
+            <p><a href="/FanOn">Turn fan on</a></p>
+            <p><a href="/FanOff">Turn fan off</a></p>
+        </div>
+        <script type="text/javascript">
+            var fanState = document.getElementById("FanState")
+            console.log(fanState.innerHTML)
+            if(fanState.innerHTML == "Manual") {
+                console.log("Fan is man");
+                document.getElementById('FanControls').style.display = "inline";
+            }
+            else {
+                console.log("Fan is auto");
+                document.getElementById('FanControls').style.display = "none";
+            }
 
+</script>
     </div>
     <div>
         <p><a href="/LEDOn">Turn LED On</a></p>

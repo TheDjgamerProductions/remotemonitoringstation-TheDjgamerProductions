@@ -152,6 +152,18 @@ if (var == "INVFANCONTROL") {
     return "Automatic";
   }
 }
+
+if (var == "SAFESTATE") {
+  if (safeLocked) {
+    return "Locked";
+  }
+  else {
+    return "Unlocked";
+  }
+
+
+  
+}
   // Default "catch" which will return nothing in case the HTML has no variable to replace.
   return String();
 }
