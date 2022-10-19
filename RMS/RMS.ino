@@ -233,7 +233,7 @@ void loop() {
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
   if (autoFanEnabled) {
-  autoFanController(25.00);
+  autoFanController(30.00);
   }
   fanController();
   delay(LOOPDELAY); // To allow time to publish new code.
