@@ -107,8 +107,16 @@ void routesConfiguration() {
   });
 
 
-  server.onNotFound([](AsyncWebServerRequest * request) {
-    request->send(SPIFFS, "/404.html");
+server.onNotFound([](AsyncWebServerRequest * request) {
+    if (request->url().endsWith(F(".jpg"))) {
+      // Extract the filename that was attempted
+      int fnsstart = request->url().lastIndexOf('/');
+      String fn = request->url().substring(fnsstart);
+      // Load the image from SPIFFS and send to the browser.
+      request->send(SPIFFS, fn, "image/jpeg", true);
+    } else {
+      request->send(SPIFFS, "/404.html");
+    }
   });
 }
 
