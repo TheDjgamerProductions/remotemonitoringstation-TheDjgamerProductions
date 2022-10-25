@@ -1,3 +1,11 @@
+#bannerimage {
+    width: 100%;
+    background-image: url("LakeBurleyGriffin.jpg");
+    height: 115px;
+    background-position: 25% 26%;
+  }
+
+
 .grid-container {
     display: grid;
     grid-template-columns: auto auto;
