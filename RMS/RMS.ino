@@ -66,6 +66,7 @@ Adafruit_ADT7410 tempsensor = Adafruit_ADT7410();
 AsyncWebServer server(80);
 
 
+
 //Motor Setup
 
 #include <Adafruit_MotorShield.h>
@@ -137,7 +138,7 @@ void setup() {
   else Serial.println("seesaw started");
 
 
-  
+
 
   ss.tftReset();
   ss.setBacklight(0x0); //set the backlight fully on
@@ -150,7 +151,7 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi..");
-    tftDrawText("Connecting to WiFi...",ST77XX_WHITE,0,0,2);
+    tftDrawText("Connecting to WiFi...", ST77XX_WHITE, 0, 0, 2);
   }
   tft.fillScreen(ST77XX_BLACK);
   Serial.println();
@@ -158,7 +159,7 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
   String ipString = WiFi.localIP().toString();
-  tftDrawText(ipString,ST77XX_WHITE,0,60,2);
+  tftDrawText(ipString, ST77XX_WHITE, 0, 60, 2);
 
   routesConfiguration(); // Reads routes from routesManagement
 
@@ -233,7 +234,7 @@ void loop() {
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
   if (autoFanEnabled) {
-  autoFanController(30.00);
+    autoFanController(30.00);
   }
   fanController();
   delay(LOOPDELAY); // To allow time to publish new code.
@@ -287,7 +288,7 @@ void tftDrawText(String text, uint16_t color, int x, int y, int textSize) {
   //tft.fillScreen(ST77XX_BLACK);
   tft.setCursor(x, y);
   tft.setTextSize(textSize);
-  tft.setTextColor(color,ST77XX_BLACK);
+  tft.setTextColor(color, ST77XX_BLACK);
   tft.setTextWrap(true);
   tft.print(text);
 }

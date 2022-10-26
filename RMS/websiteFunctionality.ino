@@ -37,20 +37,12 @@ void routesConfiguration() {
   });
 
 
-  // Example of route with authentication, and use of processor
-  // Also demonstrates how to have arduino functionality included (turn LED on)
-  server.on("/LEDOn", HTTP_GET, [](AsyncWebServerRequest * request) {
-    if (!request->authenticate(http_username, http_password))
-      return request->requestAuthentication();
-    LEDOn = true;
-    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
-  });
 
 
-  server.on("/LEDOff", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/toggleLED", HTTP_GET, [](AsyncWebServerRequest * request) {
     if (!request->authenticate(http_username, http_password))
       return request->requestAuthentication();
-    LEDOn = false;
+    LEDOn = !LEDOn;
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
@@ -64,29 +56,12 @@ void routesConfiguration() {
   });
 
 
-  server.on("/SafeLock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+
+  server.on("/ToggleFan",  HTTP_GET, [](AsyncWebServerRequest * request) {
     if (!request->authenticate(http_username, http_password))
       return request->requestAuthentication();
-    safeLocked = true;
-    logEvent("Safe Locked via Website");
-    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
-  });
-
-
-  server.on("/FanOn",  HTTP_GET, [](AsyncWebServerRequest * request) {
-    if (!request->authenticate(http_username, http_password))
-      return request->requestAuthentication();
-    fanEnabled = true;
-    logEvent("Fan on via Website");
-    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
-  });
-
-
-  server.on("/FanOff",  HTTP_GET, [](AsyncWebServerRequest * request) {
-    if (!request->authenticate(http_username, http_password))
-      return request->requestAuthentication();
-    fanEnabled = false;
-    logEvent("Fan Off via Website");
+    fanEnabled = !fanEnabled;
+    logEvent("Fan toggled via Website");
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
@@ -98,16 +73,16 @@ void routesConfiguration() {
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
-  server.on("/SafeUnlock",  HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/ToggleSafe",  HTTP_GET, [](AsyncWebServerRequest * request) {
     if (!request->authenticate(http_username, http_password))
       return request->requestAuthentication();
-    safeLocked = false;
-    logEvent("Safe Unlocked via Website");
+    safeLocked = !safeLocked;
+    logEvent("Safe toggled via Website");
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
 
-server.onNotFound([](AsyncWebServerRequest * request) {
+  server.onNotFound([](AsyncWebServerRequest * request) {
     if (request->url().endsWith(F(".jpg"))) {
       // Extract the filename that was attempted
       int fnsstart = request->url().lastIndexOf('/');
@@ -140,38 +115,60 @@ String processor(const String& var) {
     String datetime = getDateTime();
     return datetime;
   }
-
+  if (var == "INVFANSTATE") {
+    if (fanEnabled) {
+      return "Off";
+    } else {
+      return "On";
+    }
+  }
 
   if (var == "TEMPERATURE") {
     return String(tempsensor.readTempC());
   }
 
-if (var == "FANCONTROL") {
-  if (autoFanEnabled) {
-    return "Automatic";
-  } else {
-    return "Manual";
+  if (var == "FANCONTROL") {
+    if (autoFanEnabled) {
+      return "Automatic";
+    } else {
+      return "Manual";
+    }
   }
-}
-if (var == "INVFANCONTROL") {
-  if (autoFanEnabled) {
-    return "  ";
-  } else {
-    return "Automatic";
-  }
-}
-
-if (var == "SAFESTATE") {
-  if (safeLocked) {
-    return "Locked";
-  }
-  else {
-    return "Unlocked";
+  if (var == "INVFANCONTROL") {
+    if (autoFanEnabled) {
+      return "Manual";
+    } else {
+      return "Automatic";
+    }
   }
 
+  if (var == "SAFESTATE") {
+    if (safeLocked) {
+      return "Locked";
+    }
+    else {
+      return "Unlocked";
+    }
+  }
+  if (var == "TOGGLESAFESTATE") {
+    if (safeLocked) {
+      return "Unlock Safe";
+    }
+    else {
+      return "Lock Safe";
+    }
+  }
 
-  
-}
+  if (var == "TOGGLELED") {
+    if (LEDOn) {
+      return "Off";
+    }
+    else {
+      return "On";
+    }
+    
+  }
+
   // Default "catch" which will return nothing in case the HTML has no variable to replace.
   return String();
 }

@@ -1,7 +1,7 @@
+ 
 #bannerimage {
     width: 100%;
-    /* background-image: url("LakeBurleyGriffin.jpg"),linear-gradient(to bottom, #ADB2B6, #abaeb300); */
-    background-image: linear-gradient(to bottom, rgba(255,255,255,0) 10%,rgba(45, 35, 39,1)), url(LakeBurleyGriffin.jpg);
+    background-image: url("LakeBurleyGriffin.jpg");
     height: 115px;
     background-position: 25% 26%;
   }
@@ -20,14 +20,7 @@
     text-align: center;
     padding: 20px 0;
     font-size: 20px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
-
-
-.textNOBG {
-    color: rgb(255, 255, 255);
-}
-
 
 .tinyText {
     font-size: 10px;
@@ -40,16 +33,14 @@
 }
 
 body {
-    background-color: rgb(45, 35, 39);
+    background-color: #940000;
     /*color: blue;*/
 }
 
-
 h1 {
-    background-color: #3C6D84;
+    background-color: #ff0000;
     color: white;
     text-align: center;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 
@@ -60,7 +51,6 @@ ul {
     padding: 0;
     overflow: hidden;
     background-color: #3C6D84;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 li {

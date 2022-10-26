@@ -3,15 +3,15 @@
 
 <head>
     <!-- <script type="text/javascript">
-        function hideDiv() {
-            var fanState = document.getElementById("FanState")
-            console.log(fanState.innerHTML)
-            if(fanState == "Manual")
-                //document.getElementById('FanControls').style.visibility = "show";
-                console.log("Fan is manual");
-            else
-                console.log("Fan is auto");
-                document.getElementById('FanControls').style.display = "none";
+        function SendData() {
+            console.log("About to send data!");
+            var ws = new WebSocket("ws://192.168.249.18/fanThreshold");
+            var Threshold = document.getElementById("thresholdInput").value;
+            console.log(Threshold);
+            ws.onopen = function() {
+            ws.send(Threshold);
+            ws.close();
+            }
         }
         </script> -->
     <meta charset="UTF-8">
@@ -32,7 +32,7 @@
 <h1>Status Dashboard</h1>
 
 <div class="grid-container">
-    <div class="banner">Title</div>
+    <!-- <div class="banner">Dashboard</div> -->
     <div><p>Date and Time </p>
         <p>%DATETIME% *</p></div>
     <div>
@@ -41,24 +41,18 @@
     </div>
     <div>  
         <p>Safe %SAFESTATE%</p>
-        <p><a href="/SafeLock">Lock Safe</a></p>
-        <p><a href="/SafeUnlock">Unlock Safe</a></p>
-
+        <p><a href="/ToggleSafe">%TOGGLESAFESTATE%</a></p>
     </div>
     <div>  
         <p>Fan Control</p>
         <p id="FanState">%FANCONTROL%</p>
         <p><a href="/FanControl">Make fan %INVFANCONTROL%</a></p>
         <div id="ManFanControls">
-            <p><a href="/FanOn">Turn fan on</a></p>
-            <p><a href="/FanOff">Turn fan off</a></p>
+            <p><a href="/ToggleFan">Turn fan %INVFANSTATE%</a></p>
         </div>
-        <!--
-        <div id="AutoFanControls">  
-            <span>Input Threshold: </span><input type="number"><span>℃ </span><span><input type="button" href="/setThreshold">Set</input></span>
-
-
-
+        
+        <!-- <div id="AutoFanControls">  
+            <span>Input Threshold: </span><input id="thresholdInput"type="number"><span>℃ </span><span><button type="button" onclick="SendData()">Set</button></span>
         </div>  
         -->
        
@@ -72,17 +66,18 @@
             if(fanState.innerHTML == "Manual") {
                 console.log("Fan is man");
                 document.getElementById('ManFanControls').style.display = "inline";
+                document.getElementById('AutoFanControls').style.display = "none";
             }
             else {
                 console.log("Fan is auto");
                 document.getElementById('ManFanControls').style.display = "none";
+                document.getElementById('AutoFanControls').style.display = "inline";
             }
 
 </script>
     </div>
     <div>
-        <p><a href="/LEDOn">Turn LED On</a></p>
-        <p><a href="/LEDOff">Turn LED Off</a></p>
+        <p><a href="/toggleLED">Turn LED %TOGGLELED%</a></p>
     </div>
     <div>
 

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard</title>
-    <link rel="stylesheet" href="arduino.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 
 <body>
@@ -17,17 +17,23 @@
     </ul>
 </nav>
 
-<h1>Status Dashboard</h1>
+<h1>Admin Dashboard</h1>
 
 <div class="grid-container">
-    <div class="banner">Title</div>
     <div><p>Date and Time </p>
         <p>%DATETIME% *</p></div>
-    <div>LogEvents<p><a href="/logOutput">Download</a></div>
+    <div>Event Log<p><a href="/logOutput">Download</a></div>
+    <div>
+    
+        <div>
+        Alarm
+        <p> <a href="/soundAlarm">Sound</a>
+        </div>
+    
+    </div>
     <div>
 
     </div>
-
 
 </div>
 
