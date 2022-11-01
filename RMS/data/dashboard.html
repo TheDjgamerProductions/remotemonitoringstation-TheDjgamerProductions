@@ -51,10 +51,14 @@
             <p><a href="/ToggleFan">Turn fan %INVFANSTATE%</a></p>
         </div>
         
-        <!-- <div id="AutoFanControls">  
-            <span>Input Threshold: </span><input id="thresholdInput"type="number"><span>℃ </span><span><button type="button" onclick="SendData()">Set</button></span>
+        <div id="AutoFanControls">  
+            <form action="/setTemperatureThresholdGuest">
+                Temperature Threshold <br>
+                <input type="number" name="tempThreshold" value="%CURRENTTHRESHOLD%">
+                <input type="submit" value="Set">
+            </form><br>
         </div>  
-        -->
+       
        
        
        

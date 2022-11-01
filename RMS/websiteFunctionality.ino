@@ -1,3 +1,5 @@
+const char* PARAM_INPUT_1 = "tempThreshold";
+
 void routesConfiguration() {
 
   // Example of a 'standard' route
@@ -17,6 +19,10 @@ void routesConfiguration() {
   // Example of linking to an external file
   server.on("/arduino.css", HTTP_GET, [](AsyncWebServerRequest * request) {
     request->send(SPIFFS, "/arduino.css", "text/css");
+  });
+
+  server.on("/admin.css", HTTP_GET, [](AsyncWebServerRequest * request) {
+    request->send(SPIFFS, "/admin.css", "text/css");
   });
 
 
@@ -81,7 +87,6 @@ void routesConfiguration() {
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
 
-
   server.onNotFound([](AsyncWebServerRequest * request) {
     if (request->url().endsWith(F(".jpg"))) {
       // Extract the filename that was attempted
@@ -93,6 +98,25 @@ void routesConfiguration() {
       request->send(SPIFFS, "/404.html");
     }
   });
+  server.on("/setTemperatureThresholdGuest", HTTP_GET,  [](AsyncWebServerRequest * request) {
+    int newThreshold;
+    if (request->hasParam(PARAM_INPUT_1)) {
+      fanTemperatureThreshold = request->getParam(PARAM_INPUT_1)->value().toFloat();
+      String logMessage = "Guest set Automatic Fan Theshold to" + String(fanTemperatureThreshold);
+      logEvent(logMessage);
+    }
+    request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
+  });
+  
+  server.on("/AdminToggleSafe",  HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(admin_username, admin_password))
+      return request->requestAuthentication();
+    safeLocked = !safeLocked;
+    logEvent("Safe toggled via Website (ADMIN)");
+    request->send(SPIFFS, "/adminDashboard.html", "text/html", false, processor);
+  });
+
+
 }
 
 String getDateTime() {
@@ -166,7 +190,7 @@ String processor(const String& var) {
     else {
       return "On";
     }
-    
+
   }
 
   // Default "catch" which will return nothing in case the HTML has no variable to replace.

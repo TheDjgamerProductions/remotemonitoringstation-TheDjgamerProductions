@@ -92,7 +92,7 @@ int servoPin = 12;
 int blindHight = 0;
 // ESP32Servo End
 
-
+float fanTemperatureThreshold = 25.0;
 
 
 void setup() {
@@ -234,7 +234,7 @@ void loop() {
   windowBlinds();
   tftDrawText(readTempature(), ST77XX_WHITE, 0, 0, 3);
   if (autoFanEnabled) {
-    autoFanController(30.00);
+    autoFanController(fanTemperatureThreshold);
   }
   fanController();
   delay(LOOPDELAY); // To allow time to publish new code.
