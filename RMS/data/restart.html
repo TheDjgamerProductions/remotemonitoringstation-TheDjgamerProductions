@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+    <style></style>
+  </head>
+  <body>
+    <h1>Restarting system... Please Wait</h1>
+  </body>
+  <script>
+    var IP = window.location.hostname
+    function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+  }
+
+  delay(1010).then(() => window.location = "/");
+  </script>
+</html>

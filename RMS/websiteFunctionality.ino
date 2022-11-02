@@ -42,6 +42,24 @@ void routesConfiguration() {
     request->send(SPIFFS, "/adminDashboard.html", "text/html", false, processor);
   });
 
+  server.on("/Shutdown.html", HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(admin_username, admin_password))
+      return request->requestAuthentication();
+    logEvent("System Shutdown");
+    request->send(SPIFFS, "/shutdown.html", "text/html", false, processor);
+    delay(1000);
+    tft.fillScreen(ST77XX_BLACK);
+    ESP.deepSleep(-1);
+  });
+
+  server.on("/Restart.html", HTTP_GET, [](AsyncWebServerRequest * request) {
+    if (!request->authenticate(admin_username, admin_password))
+      return request->requestAuthentication();
+    logEvent("System Restart");
+    request->send(SPIFFS, "/restart.html", "text/html", false, processor);
+    delay(1000);
+    ESP.restart();
+  });
 
 
 
@@ -107,7 +125,7 @@ void routesConfiguration() {
     }
     request->send(SPIFFS, "/dashboard.html", "text/html", false, processor);
   });
-  
+
   server.on("/AdminToggleSafe",  HTTP_GET, [](AsyncWebServerRequest * request) {
     if (!request->authenticate(admin_username, admin_password))
       return request->requestAuthentication();
@@ -139,6 +157,7 @@ String processor(const String& var) {
     String datetime = getDateTime();
     return datetime;
   }
+
   if (var == "INVFANSTATE") {
     if (fanEnabled) {
       return "Off";
